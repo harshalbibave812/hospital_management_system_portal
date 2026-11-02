@@ -10,3 +10,8 @@ export const getUser = () => {
 export const removeUser = () => localStorage.removeItem('hms_user');
 
 export const logout = () => { removeToken(); removeUser(); };
+
+export const getRoleDashboard = (role_name) => {
+  const map = { PATIENT: '/patient/dashboard', DOCTOR: '/doctor/dashboard', ADMIN: '/admin/dashboard' };
+  return map[role_name] || '/login';
+};

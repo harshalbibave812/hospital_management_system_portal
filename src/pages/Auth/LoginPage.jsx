@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../../services/authService';
-import { saveToken, saveUser } from '../../utils/auth.utils';
+import { saveToken, saveUser, getRoleDashboard } from '../../utils/auth.utils';
 import './Auth.css';
 
 const LoginPage = () => {
@@ -16,18 +16,21 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const data = await loginUser(form);
-    setLoading(false);
-
-    if (data.token) {
-      saveToken(data.token);
-      saveUser(data.user);
-      navigate('/dashboard');
-    } else if (data.user_id) {
-      // Not verified — go to OTP
-      navigate('/verify-otp', { state: { user_id: data.user_id } });
-    } else {
-      setError(data.message || 'Login failed');
+    try {
+      const data = await loginUser(form);
+      if (data.token) {
+        saveToken(data.token);
+        saveUser(data.user);
+        navigate(getRoleDashboard(data.user.role_name), { replace: true });
+      } else if (data.user_id) {
+        navigate('/verify-otp', { state: { user_id: data.user_id } });
+      } else {
+        setError(data.message || 'Login failed');
+      }
+    } catch (error) {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 

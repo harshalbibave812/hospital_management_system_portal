@@ -11,7 +11,9 @@ const SignupPage = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchRoles().then((data) => setRoles(data.roles || []));
+    fetchRoles()
+      .then((data) => setRoles(data.roles || []))
+      .catch(() => setError('Failed to load roles'));
   }, []);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -20,13 +22,17 @@ const SignupPage = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const data = await registerUser({ ...form, role_id: Number(form.role_id) });
-    setLoading(false);
-
-    if (data.user) {
-      navigate('/verify-otp', { state: { user_id: data.user.id } });
-    } else {
-      setError(data.message || 'Registration failed');
+    try {
+      const data = await registerUser({ ...form, role_id: Number(form.role_id) });
+      if (data.user) {
+        navigate('/verify-otp', { state: { user_id: data.user.id } });
+      } else {
+        setError(data.message || 'Registration failed');
+      }
+    } catch (error) {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 

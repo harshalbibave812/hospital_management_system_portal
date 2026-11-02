@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { sendOtp, verifyOtp } from '../../services/authService';
-import { saveToken, saveUser } from '../../utils/auth.utils';
+import { saveToken, saveUser, getRoleDashboard } from '../../utils/auth.utils';
 import './Auth.css';
 
 const OtpPage = () => {
@@ -24,13 +24,18 @@ const OtpPage = () => {
   const handleSendOtp = async () => {
     setError('');
     setLoading(true);
-    const data = await sendOtp({ user_id, method });
-    setLoading(false);
-    if (data.message && !data.errors) {
-      setOtpSent(true);
-      setSuccess(data.message);
-    } else {
-      setError(data.message || 'Failed to send OTP');
+    try {
+      const data = await sendOtp({ user_id, method });
+      if (data.message && !data.errors) {
+        setOtpSent(true);
+        setSuccess(data.message);
+      } else {
+        setError(data.message || 'Failed to send OTP');
+      }
+    } catch (error) {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,15 +43,19 @@ const OtpPage = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const data = await verifyOtp({ user_id, otp });
-    setLoading(false);
-
-    if (data.token) {
-      saveToken(data.token);
-      saveUser(data.user);
-      navigate('/dashboard');
-    } else {
-      setError(data.message || 'OTP verification failed');
+    try {
+      const data = await verifyOtp({ user_id, otp });
+      if (data.token) {
+        saveToken(data.token);
+        saveUser(data.user);
+        navigate(getRoleDashboard(data.user.role_name), { replace: true });
+      } else {
+        setError(data.message || 'OTP verification failed');
+      }
+    } catch (error) {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
